@@ -1,11 +1,11 @@
 ---
-title: "My Title"
-shorttitle: "Short Title in Running Header"
+title: "Academia in Silico"
+shorttitle: "Academia in Silico"
 author:
-  - name: Jane Doe
+  - name: Alp Kaan Aksu
     corresponding: true
     orcid: 0000-0000-0000-0001
-    email: janedoe@generic.edu
+    email: alp.aksu
     affiliations:
       - name: Generic University
         department: Department of Scholarly Studies
@@ -42,17 +42,36 @@ format:
 
 This is my first paragraph. Any section headings in the introduction should be in levels 2--5.
 
-## Section in Introduction
+## Replication Crisis
 
-This is a reference [@cohen2003applied].
+Modern empirical science relies on the assumption that research findings are not unique historical events, but results that can be independently verified.
 
-# Method
+Two concepts are central, when we try to evaluate our research by holding it to the standards implied by this assumption: reproducibility and replicability.
 
-## Participants
+Reproducibility refers to the ability to obtain the same results when the original data are reanalyzed using the same methods, code, and analytical decisions. Replication, by contrast, involves collecting new data—often following the original design as closely as possible, to test whether the reported effect can be observed again in an independent sample. Together, these practices serve as core mechanisms for quality control in empirical research. The term replication crisis denotes the growing concern that a substantial share of published findings, particularly in psychology, fail to reproduce or replicate at rates that would be expected given their reported statistical support. This concern has motivated increased scrutiny of research practices, evidential standards, and the institutional incentives shaping scientific knowledge production.
 
-## Measures
+Since @opensciencecollaborationEstimatingReproducibilityPsychological2015 tried to replicate 100 studies published in several scientific journals of Psychology, we know that most of the findings (as much as two thirds) of our psychological research is not reproducible. 97% of the original studies had significant results, while only 36% of the replications did. The researchers subjectively rated 39% of the results as successfully replicated. This was an attempt for introspection in Psychology. After decades of research, the scientific community itself tried to evaluate their standing. These finding triggered a larger scale movement, mainly in Psychology, but also globally in the scientific community.
 
-## Procedure
+Us being aware of the questions of the quality of our research, and its main output, publications, go further back. The concerns related to our published results, and more structured attempts at soberly evaluating the current situation dates back at least a few decades. Leaving empirical studies of replicability and reproducibility aside, @ioannidisWhyMostPublished2005, focusing on biomedical research, argued that the majority of published research findings are false. He put it bluntly: "It can be proven that most claimed research findings are false." According to him, this is not a surprise, or not a direct sign that the scientific method is broken. For Ioannidis, this is related to several factors such as low statistical power, small true effects, flexible analyses, biased incentives, publication bias.
+
+The fact, that we are not able to replicate or reproduce most of our findings does not speak for itself. It was, and still is, a challenge to interpret the perceived situation, and arrive at conclusions regarding the meaning of our inability to replicate our findings. For @maxwellPsychologySufferingReplication2015, the results our understanding of the *Replication Crisis* is based on might not point at a problem at all, but rather are a direct consequence of inadequate replications (e.g. low statistical power of replication studies). 
+
+## The Problem
+
+Looking at the results of replication studies and seeing how they fail to arrive at the same conclusions as their corresponding original studies, it is intuitive to think that it is *bad* that we are not able to replicate most of our findings.
+
+
+
+
+## Our Goal
+
+# Implementation
+
+## The Idea
+
+## Decomposition
+
+## Scheduling and Steps
 
 # Results
 
