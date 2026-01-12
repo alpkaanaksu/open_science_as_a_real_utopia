@@ -7,16 +7,20 @@ import argparse
 # Format: {"name": "experiment_name", "flags": "flags_string"}
 experiments = [
     {
-        "name": "convergence_check",
-        "flags": "--researchers=500 --effects=500 --selection=0 --bias=0 --timesteps=50 --max_replications=100"
+        "name": "baseline",
+        "flags": "--selection=0 --bias=1 --replication_journal=0 --effects=10000  --visualize"
     },
     {
-        "name": "baseline_crisis",
-        "flags": "--researchers=500 --effects=100000 --selection=1 --bias=1 --timesteps=50"
+        "name": "limit_replications",
+        "flags": "--selection=0 --bias=1 --max_replications=2 --replication_journal=0 --effects=10000  --visualize"
     },
     {
-        "name": "replication_journal_truth",
-        "flags": "--researchers=500 --effects=10000 --selection=0 --bias=1 --replication_journal=1 --timesteps=50"
+        "name": "replication_journal",
+        "flags": "--selection=0 --bias=1 --replication_journal=1 --effects=10000  --visualize"
+    },
+    {
+        "name": "replication_journal_with_limits",
+        "flags": "--selection=0 --bias=1 --max_replications=2 --replication_journal=1 --effects=10000  --visualize"
     }
 ]
 

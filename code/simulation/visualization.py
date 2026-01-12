@@ -28,9 +28,10 @@ class Visualizer:
             f"Effects: {config.number_of_effects} | "
             f"Bias: {bias_level}\n"
             f"Selection: {sel_strat} | "
-            f"Career Steps: {config.timesteps_per_career_step} steps"
+            f"Career Steps: {config.timesteps_per_career_step} | "
+            f"Max Repl: {config.max_replications_per_effect if config.max_replications_per_effect else 'Inf'} | "
+            f"Repl. Journal: {'Yes' if config.replication_journal else 'No'}"
         )
-        self.fig.text(0.5, 0.96, "Academia in Silico", ha='center', fontsize=16, fontweight='bold')
         self.fig.text(0.5, 0.93, config_text, ha='center', fontsize=11)
         self.fig.subplots_adjust(top=0.88, hspace=0.3, wspace=0.3)
         
@@ -216,7 +217,6 @@ class Visualizer:
             f"Scientific Knowledge:\n"
             f"  - Explored Effects: {n_explored}\n"
             f"  - Avg Studies/Effect: {avg_studies:.2f}\n"
-            f"  - Mean KL Divergence: {mean_kl:.3f}\n"
             f"  - Mean KL Divergence: {mean_kl:.3f}\n"
         )
         self.stats_text.set_text(stats_msg)

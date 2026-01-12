@@ -56,12 +56,11 @@ def main():
     print(f"  Max Timesteps:    {config.timesteps_max}")
     print(f"  Publication Bias: {config.publication_bias.name.title()}")
     print(f"  Selection Strat:  {config.initial_selection_condition.name.title()}")
-    print(f"  Selection Strat:  {config.initial_selection_condition.name.title()}")
     print(f"  Max Replications: {config.max_replications_per_effect}")
     print(f"  Repl. Journal:    {config.replication_journal}")
     print(f"  Output Prefix:    {args.output}")
     print(f"  Visualization:    {args.visualize}")
-    print("-" * 40)
+    print("-"*40)
     
     # Initialize Visualizer if requested
     viz = None
