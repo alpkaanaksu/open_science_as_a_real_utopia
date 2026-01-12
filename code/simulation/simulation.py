@@ -39,7 +39,10 @@ class Simulation:
         self.stats = StatisticsCollector()
         
         # Configuration
-        self.journals = config.journals
+        self.journals = list(config.journals)
+        if not config.replication_journal:
+            self.journals = [j for j in self.journals if j.name != "Replication Reports"]
+            
         self.current_timestep = 0
 
 
@@ -71,30 +74,19 @@ class Simulation:
         # Published effect IDs set for fast lookup
         published_effect_ids = {s.effect_id for s in published_studies}
         
-        # Pre-calculate valid replication candidates if limit exists
-        valid_replication_candidates = []
+        published_effect_ids = {s.effect_id for s in published_studies}
+        
+        # Fast Replication Check 
+        # We need to act based on PUBLISHED studies only, but prevent intra-step stampedes.
+        
+        # Initial counts from published studies
+        from collections import Counter
+        published_repl_counts = Counter()
         if published_studies:
-            if config.max_replications_per_effect is not None:
-                # Count current replications
-                # We need to count PUBLISHED replications.
-                from collections import Counter
-                repl_counts = Counter(s.effect_id for s in published_studies if s.study_type == StudyType.REPLICATION)
-                
-                # Filter effects
-                # We want effect_ids that have appeared in ANY published study (so they are "published"),
-                # BUT have fewer than MAX replications.
-                # published_effect_ids contains all effects that have at least one study (original or replication).
-                
-                valid_replication_candidates = [
-                    eid for eid in published_effect_ids 
-                    if repl_counts[eid] < config.max_replications_per_effect
-                ]
-            else:
-                # Unlimited: candidates are all published effect IDs.
-                # Weighted by number of publications? "candidates = [s.effect_id for s in published_studies]" was weighted.
-                # If an effect has 10 papers, it appears 10 times in list -> 10x chance.
-                # The user didn't ask to change this weighting, so let's preserve it.
-                valid_replication_candidates = [s.effect_id for s in published_studies]
+             published_repl_counts = Counter(s.effect_id for s in published_studies if s.study_type == StudyType.REPLICATION)
+             
+        # Tracking for this batch (intra-timestep collision prevention)
+        current_batch_repl_counts = Counter()
         
         for researcher in ready_researchers:
             # Determine Study Type (7.1)
@@ -105,36 +97,58 @@ class Simulation:
             
             if is_replication:
                 # 7.2.2 Replication: requires published studies
-                if published_studies:
-                    # Count replications per effect if limit is set
-                    # Optimization: Do this ONCE per timestep or just filter candidates
-                    # Since candidates are chosen randomly, we can filter lazily? 
-                    # No, we need valid list. But constructing list of all 1000s studies each researcher... performance?
-                    # Let's count once at start of function? But publications don't change within a timestep until `_handle_peer_review` updates them?
-                    # The `published_studies` list DOES NOT change within `_researchers_act`! Researchers conduct studies, but they go to `pending_studies`.
-                    # Peer review happens AFTER `_researchers_act`.
-                    # So we can calculate replication counts ONCE at the start of `_researchers_act`.
+                if published_effect_ids: 
+                    # Attempt loop
+                    found_target = False
                     
-                    # This logic is moved outside the loop for performance, see below.
-                    # Using global `valid_replication_candidates` computed at start.
-                    
-                    if valid_replication_candidates:
-                        target_effect_id = random.choice(valid_replication_candidates)
-                        target_effect = self.effects[target_effect_id]
+                    # Optimization: Sample from list
+                    for _ in range(10): # 10 attempts
+                        if not published_studies: break 
+                        
+                        candidate_study = random.choice(published_studies)
+                        candidate_id = candidate_study.effect_id
+                        
+                        # Check Max Replications Limit
+                        if config.max_replications_per_effect is not None:
+                            # Count = Published + Batch
+                            total_count = published_repl_counts[candidate_id] + current_batch_repl_counts[candidate_id]
+                            if total_count >= config.max_replications_per_effect:
+                                continue 
+                                
+                        # Valid
+                        target_effect = self.effects[candidate_id]
                         study_type = StudyType.REPLICATION
-                    else:
+                        found_target = True
+                        
+                        # Increment Intra-Batch Counter
+                        current_batch_repl_counts[candidate_id] += 1
+                        break
+                    
+                    if not found_target:
                         is_replication = False
                 else:
                     is_replication = False
             
             if not is_replication: # Original
                 # 7.2.1 Original: novel effects
-                # Naive implementation: sample until finding one not published
+                
+                # Check exhaust
+                if len(published_effect_ids) >= config.number_of_effects:
+                    continue
+
+                # Sample until finding one not published
+                attempts = 0
                 while True:
+                    attempts += 1
+                    if attempts > 200:
+                        target_effect = None
+                        break
                     candidate_id = random.randint(0, config.number_of_effects - 1)
                     if candidate_id not in published_effect_ids:
                         target_effect = self.effects[candidate_id]
                         break
+                
+                if target_effect is None: continue
                 study_type = StudyType.ORIGINAL
             
             # Create Study
@@ -234,11 +248,21 @@ class Simulation:
         """
         Moves studies from pending to published if approved by ANY journal.
         "Shopping Around" logic.
+        CHECKS TIME: Only processes completed studies.
         """
-        items_to_process = list(self.pending_studies)
-        self.pending_studies.clear()
+        # Separate pending into ready and waiting
+        ready_for_review = []
+        still_pending = []
         
-        for study in items_to_process:
+        for s in self.pending_studies:
+            if s.timestep_completed <= self.current_timestep:
+                ready_for_review.append(s)
+            else:
+                still_pending.append(s)
+        
+        self.pending_studies = still_pending
+        
+        for study in ready_for_review:
             is_published = False
             publishing_journal_name = None
             
@@ -348,10 +372,10 @@ class Simulation:
                             and s.timestep_completed <= self.current_timestep]
                             
         for study in relevant_studies:
-            if selection_condition == SelectionStrategy.TRUTH: 
-                score += study.truth_contribution
-            else: # Novelty
-                if study.publication_status == PublicationStatus.PUBLISHED:
+            if study.publication_status == PublicationStatus.PUBLISHED:
+                if selection_condition == SelectionStrategy.TRUTH: 
+                    score += study.truth_contribution
+                else: # Novelty
                     score += study.novelty_contribution
         return score
 

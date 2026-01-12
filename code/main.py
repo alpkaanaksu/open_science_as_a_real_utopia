@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--bias", type=int, default=config.publication_bias, help="Publication bias (0=none, 1=weak, 2=strong)")
     parser.add_argument("--selection", type=int, default=config.initial_selection_condition, help="Selection strategy (0=truth, 1=novelty)")
     parser.add_argument("--max_replications", type=int, default=None, help="Max replications per effect (default: unlimited)")
+    parser.add_argument("--replication_journal", type=int, default=int(config.replication_journal), help="Include replication journal (1=Yes, 0=No)")
     
     # Output
     parser.add_argument("--output", type=str, default="simulation_output", help="Prefix for output CSV files")
@@ -42,6 +43,7 @@ def main():
     config.initial_selection_condition = SelectionStrategy(args.selection)
     if args.max_replications is not None:
         config.max_replications_per_effect = args.max_replications
+    config.replication_journal = bool(args.replication_journal)
     
     print("="*40)
     print("SCIENTIFIC COMMUNITY SIMULATION")
@@ -52,7 +54,9 @@ def main():
     print(f"  Max Timesteps:    {config.timesteps_max}")
     print(f"  Publication Bias: {config.publication_bias.name.title()}")
     print(f"  Selection Strat:  {config.initial_selection_condition.name.title()}")
+    print(f"  Selection Strat:  {config.initial_selection_condition.name.title()}")
     print(f"  Max Replications: {config.max_replications_per_effect}")
+    print(f"  Repl. Journal:    {config.replication_journal}")
     print(f"  Output Prefix:    {args.output}")
     print(f"  Visualization:    {args.visualize}")
     print("-" * 40)

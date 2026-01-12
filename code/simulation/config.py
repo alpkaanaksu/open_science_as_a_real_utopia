@@ -9,6 +9,10 @@ timesteps_per_career_step = 35
 # Peer Review
 max_journal_submissions = 5 # Number of journals a paper can be submitted to before giving up
 
+# Replications
+max_replications_per_effect = None # Maximum number of replications per effect
+replication_journal = True # Whether to include a specialized replication journal
+
 # Effects distribution parameters
 base_null_probability = 0.9
 effect_size_mean = 0.3

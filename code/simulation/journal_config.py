@@ -19,21 +19,6 @@ journals: List[JournalSpecification] = [
         name="Replication Reports",
         bias=PublicationBias.NONE,
         filters=["replication_only"]
-    ),
-    JournalSpecification(
-        name="Replication Reports",
-        bias=PublicationBias.NONE,
-        filters=["replication_only"]
-    ),
-    JournalSpecification(
-        name="Replication Reports",
-        bias=PublicationBias.NONE,
-        filters=["replication_only"]
-    ),
-    JournalSpecification(
-        name="Replication Reports",
-        bias=PublicationBias.NONE,
-        filters=["replication_only"]
     )
 ]
 
