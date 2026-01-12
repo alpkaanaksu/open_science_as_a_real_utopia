@@ -72,10 +72,22 @@ We pick agent-based modeling as our tool, which will be described in detail in t
 
 # Method: Agent-Based Modeling
 
-## 
+## Why do we model?
+
+...
+
+## What is Agent-Based Modeling?
+
+Agent-based modeling (ABM) is a computational method used to simulate the actions and interactions of autonomous agents to understand the behavior of a system from the bottom up. Unlike traditional top-down models that describe populations using aggregate variables, ABM focuses on the micro-level rules that drive individual behavior.
+
+## Why Agent-Based Modeling?
+
+The scientific community is a complex system where global outcomes—such as the rate of replication—emerge from the decentralized decisions of individual researchers navigating institutional incentives. ABM allows us to simulate these interactions in a controlled environment, making it possible to test how specific changes to the scientific system affect the long-term reliability of published knowledge.
 
 
 # Theoretical Implementation: Imagining an Agent-Based Model of the Scientific Community
+
+My model is based on (still unpublished) work by Kaitlyn Harper and Felix Schönbrodt at the Ludwig Maximilian University Munich. They provided me with their base model, which I then extended to enable new experiments and perspectives. A preliminary version of the source code of their model is available on [github.com/kaitlynharper/science-under-selection](https://github.com/kaitlynharper/science-under-selection).
 
 ## The Idea
 
@@ -185,28 +197,103 @@ Researchers are then ranked according to their scores, and the lowest performing
 
 # Technical Implementation
 
-
-## Tools
+## Considerations on the Requirements for the Implementation Tools
 
 The idea of this model based on the theoretical considerations as described in the previous section can be technically realized using many tools and environments.
 
 The choice of tools should be based on the constraints of the theoretical model, performance needs and the ease of implementation and communication.
 
-This section discusses those constraints and justifies our choices.
+### Programming Paradigms and Agent-Based Modeling
 
-## Constraints
+Agent-based modeling requires a framework capable of representing discrete entities with autonomous behaviors and internal states. This is true for agents, the objects they create and interact with, and the environment they live in.
+
+Since agent-based models also focus on emergent properties, they greatly benefit from having a system that can describe the entities as encapsulated structures with dynamic states and behaviors.
+
+Object-oriented programming is a programming paradigm that is well-suited for agent-based modeling. It provides a way to represent the entities of the simulation as objects with their own state and behavior, and to define the interactions between them.
+
+### Performance and Scalability
+
+An agent-based model can be computationally quite expensive, especially if the number of agents is large.
+
+The simulation run is essentially a loop that iterates over all agents, and possibly over all objects and relationships for each tick.
+
+Inefficient tools, data structures and algorithms, combined with nested loops and growing number of agents and objects can be a recipe for disaster. Disaster, in the sense that the time it takes to read out the results of any experiment conducted using the implemented model can be prohibitively long, hindering the productive use of the computational model for producing deeper insights. 
+
+The same tools that would be fine for another type of model, or any other project, might not fit the needs of agent-based models.
+
+Scalability also plays a very important role since agent-based models are typically run using a large population of agents (and indirectly for a large number of objects and relationships).
+
+Readily available or easily implementable parallelization strategies are also an important factor we should take into account when deciding on the tooling for agent-based models.
+
+### The Audience
+
+As much as models help with structured thinking and analyses, they are also tools for communication. Any models we create about a phenomenon should be accessible and understandable to the group of people who are otherwise generally interested in that phenomenon.
+
+The main target audience of this project is the scientific community that exists in the very reality we are trying to model. They are also mostly psychologists. 
+
+The implication is that the audience in this case is not fully technically illiterate, but also typically not a competent programmer. They should still be able to have a high-level understanding of the model, and be able to run it, and to some extent modify it. 
+
+
+### Theoretical Needs
+
+The theoretical model for this project includes multiple statistical operations, in many places, a value is drawn from a distribution. The tools we choose should be mathematically apt (which is not hard to come by with computational tools) and have further helpers in place that support the work with statistical distributions. This means, the more the tools are generally used for statistics, the easier it is to implement our model.
+
+### Ease of Analysis
+
+The implementation should be able to produce outputs that can be directly used for analyses and interpretation.
+
+Tools that allow easy visualization of the data, even while the simulation is running, are ideal.
+
+### The Verdict: Python
+
+Python is a general-purpose programming language that is well-suited for agent-based modeling. It natively supports object-oriented programming, which, as stated previously, is a programming paradigm that is well-suited for agent-based modeling.
+
+The syntax of Python is also very readable and easy to understand, which makes the code easy to read and understand, even for non-programmers. This is not to say that it is directly accessible as it is, but it is much easier to understand than other programming languages like C++ or Rust.
+
+It has a large and active community, and a wide range of libraries and frameworks that can be used to implement agent-based models. It is also a popular choice for data analysis, so there are mature libraries for statistics and data analysis, like `scipy`.
+
+Creating live visualizations of the data is also easy with Python, and there are many libraries for this purpose, like `matplotlib`.
+
+The caveat is that Python is not the best choice for performance-critical applications. The execution can still be parallelized, but the performance and scalability won't come close to languages like Rust or C++, the languages that are also harder to understand.
+
+It is a trade-off between performance and all other factors, and in this case, we are willing to sacrifice performance for ease of use, ease of analysis, and ease of communication.
 
 ## The Code
 
-![UML Diagram](media/uml.svg){#fig-uml}
+The code is available on GitHub at [github.com/alpkaanaksu/academia-in-silico](https://github.com/alpkaanaksu/academia-in-silico).
 
-For 
+![UML Diagram](media/uml.svg){#fig-uml fig-pos='H'}
+
+@fig-uml shows a UML diagram of the core classes relevant for the simulation. All entities resulting from the decomposition are modeled as classes. Their internal state properties are represented as attributes, and the interactions are represented as methods. The only exception to this rule is the entity of Journals. Journals are not present as a distinct class, but rather embedded in diverse places of the codebase. This is due to several factors. First, the way journals are seen in the theoretical model is more like an environment defining global variable than a distinct entity. Second, modeling journals as a distincs class would introduce a different type of interaction, which is not present in the original model description. Third, it would add a new phase to the simulation step run, which is a greater deviation from the previous understanding, that focuses on key phases for each step.
 
 
 # Experiments
 
 ## Setting the Stage: The Configuration of Experiments
 
+The simulation is highly configurable, allowing for a wide range of experimental setups. The configuration options determine the structure of the population, the environment, and the institutional incentives.
+
+### Population and Environment
+
+The simulation is initialized with a fixed number of researchers (default: 500) and a "universe of facts" consisting of a set number of effects (default: 100,000). The number of researchers and effects are fixed for the duration of the simulation. New effects do not enter the universe, and researchers, who turn inactive are replaced by new researchers, keeping the population size constant. 
+
+### Time and Evolution
+
+The simulation runs for a specified number of discrete timesteps (default: 300). Career turnover occurs periodically (default: every 35 steps), at which point researchers are evaluated, and the lowest-performing fraction is replaced by new agents inheriting traits from the successful survivors.
+
+### Peer Review and Bias
+
+The publication landscape is defined by the bias level of standard journals. This can be set to **None** (unbiased acceptance), **Weak** (preference for significance and novelty), or **Strong** (strict gatekeeping). Additionally, a specialized **Replication Reports** journal can be toggled on or off. This journal strictly accepts replication studies regardless of their results, providing a dedicated outlet for negative findings.
+
+### Researcher Strategy and Selection
+
+The primary experimental lever is the selection regime used to evaluate researchers.
+
+* **Novelty Selection** rewards researchers for publishing surprising results that shift community belief, regardless of whether that shift is towards the truth.
+
+* **Truth Selection** rewards researchers for reducing the error between community belief and the true effect size.
+
+Additionally, a hard limit on **Max Replications** per effect can be enforced to effectively stop the community from refining estimates beyond a certain point.
 
 # Results
 

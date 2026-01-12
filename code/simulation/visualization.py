@@ -38,7 +38,6 @@ class Visualizer:
         self.data_repl = {'x': [], 'y': []}
         self.data_power = {'x': [], 'y': []}
         self.data_kl = {'x': [], 'y': []}
-        self.data_mse = {'x': [], 'y': []}
         self.data_ratio = {'x': [], 'y': []}
         
         # Plot 1: Traits (Top Left)
@@ -98,12 +97,8 @@ class Visualizer:
         self.ax6.axis("off")
         self.stats_text = self.ax6.text(0.1, 0.5, "Collecting data...", fontsize=12, verticalalignment='center')
         
-        # Plot 4: Mean Squared Error (Bottom Center)
-        self.ax4.set_title("Mean Squared Error (MSE)")
-        self.ax4.set_xlabel("Timestep")
-        self.ax4.set_ylabel("MSE")
-        self.line_mse, = self.ax4.plot([], [], label="Mean MSE", color="red", linestyle="--", marker='x', markersize=2)
-        self.ax4.legend()
+        # Plot 4: Empty (Previously MSE)
+        self.ax4.axis("off")
         
         # Plot 4: Statistics (Bottom Right)
 
@@ -146,8 +141,7 @@ class Visualizer:
         kl_div = latest.get("mean_kl_divergence", 0.0)
         self._update_series(self.data_kl, t, kl_div)
 
-        mse = latest.get("mean_mse", 0.0) # Get MSE from latest stats
-        self._update_series(self.data_mse, t, mse) # Update MSE series
+
         
         # Calculate ratio and update series
         n_repl = latest.get("n_published_replication", 0)
@@ -178,13 +172,7 @@ class Visualizer:
         max_kl = max(all_kl) if all_kl else 1.0
         self.ax2.set_ylim(0, max(max_kl * 1.1, 0.1)) # Changed from + 0.01 to max(..., 0.1)
         
-        # Plot 4: MSE
-        self.line_mse.set_data(self.data_mse['x'], self.data_mse['y'])
-        self.ax4.set_xlim(0, max_t + 10)
-        
-        all_mse = self.data_mse['y']
-        max_mse = max(all_mse) if all_mse else 1.0
-        self.ax4.set_ylim(0, max(max_mse * 1.1, 0.1))
+
         
         # Plot 3
         self.line_ratio.set_data(self.data_ratio['x'], self.data_ratio['y'])
@@ -229,7 +217,7 @@ class Visualizer:
             f"  - Explored Effects: {n_explored}\n"
             f"  - Avg Studies/Effect: {avg_studies:.2f}\n"
             f"  - Mean KL Divergence: {mean_kl:.3f}\n"
-            f"  - Mean MSE: {latest.get('mean_mse', 0.0):.4f}"
+            f"  - Mean KL Divergence: {mean_kl:.3f}\n"
         )
         self.stats_text.set_text(stats_msg)
         
@@ -242,7 +230,18 @@ class Visualizer:
         self.fig.canvas.draw()
         plt.pause(0.01) # Slightly shorter pause is usually fine with flush
 
+    def save_plot(self, filepath: str):
+        """Saves the current figure to a file."""
+        if HAS_MATPLOTLIB:
+            self.fig.savefig(filepath)
+            print(f"Visualization saved to {filepath}")
+
     def close(self):
         if HAS_MATPLOTLIB:
             plt.ioff()
-            plt.show() # Keep window open until closed by user
+            # plt.show() # Keep window open until closed by user -> Handled by main.py logic now
+
+    def show_blocking(self):
+        """Blocks execution until plot window is closed."""
+        if HAS_MATPLOTLIB:
+            plt.show()

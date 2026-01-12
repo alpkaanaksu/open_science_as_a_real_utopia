@@ -73,13 +73,9 @@ class StatisticsCollector:
                 
             mean_kl = sum(kl_divs) / len(kl_divs)
             
-            # Calculate Mean Squared Error (MSE)
-            # MSE = (True Mean - Posterior Mean)^2
-            squared_errors = [(e.true_effect_size - e.posterior_effect_size)**2 for e in explored_effects_objs]
-            mean_mse = sum(squared_errors) / len(squared_errors)
+            mean_kl = sum(kl_divs) / len(kl_divs)
         else:
             mean_kl = 0.0
-            mean_mse = 0.0
 
         
         # Count types in published
@@ -107,7 +103,7 @@ class StatisticsCollector:
             "n_explored_effects": n_explored,
             "avg_studies_per_effect": avg_per_effect,
             "mean_kl_divergence": mean_kl,
-            "mean_mse": mean_mse,
+            "mean_kl_divergence": mean_kl,
             
             # Placeholder for belief accuracy if we implement it later
             # "belief_accuracy": sim.calculate_belief_accuracy() 

@@ -31,6 +31,8 @@ def main():
     
     # Visualization
     parser.add_argument("--visualize", action="store_true", help="Enable real-time visualization")
+    parser.add_argument("--save_plot", type=str, default=None, help="Path to save the final plot (e.g., output/plot.png)")
+    parser.add_argument("--no_show", action="store_true", help="Do not show the plot window at the end (useful for batch mode)")
     
     args = parser.parse_args()
     
@@ -77,17 +79,24 @@ def main():
     
     if viz:
         viz.close()
+        if args.save_plot:
+            viz.save_plot(args.save_plot)
+        
+        if not args.no_show:
+            viz.show_blocking()
     
     print("Saving statistics...")
     
     # Ensure output directory exists
-    output_dir = "output"
-    os.makedirs(output_dir, exist_ok=True)
+    # Ensure output directory exists (based on the prefix path)
+    output_prefix = args.output
+    output_dir = os.path.dirname(output_prefix)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
     
-    # Save to output directory
-    output_path = os.path.join(output_dir, args.output)
-    sim.stats.save(output_path)
-    print(f"Data saved to {output_path}_steps.csv and {output_path}_studies.csv")
+    # Save to output path
+    sim.stats.save(output_prefix)
+    print(f"Data saved to {output_prefix}_steps.csv and {output_prefix}_studies.csv")
     
     print("Simulation complete.")
 
