@@ -17,9 +17,6 @@ class Researcher:
 
     @staticmethod
     def create(researcher_id: int, timestep: int) -> "Researcher":
-        """
-        Initializes a researcher based on Section 5.2 of spec.
-        """
         import random
         
         # Replication probability: Bernoulli(0.5) -> 0 or 1

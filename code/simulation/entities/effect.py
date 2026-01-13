@@ -19,10 +19,6 @@ class Effect:
     study_id: Optional[int]
 
     def update_belief(self, study_result_d: float, study_se: float, study_id: int):
-        """
-        Updates collective beliefs using Bayesian conjugate analysis for normal distributions.
-        Section 7.6 of spec.
-        """
         from ..formulas import update_belief_posterior
         
         self.posterior_effect_size, self.posterior_effect_variance = update_belief_posterior(
@@ -35,9 +31,6 @@ class Effect:
 
     @staticmethod
     def create(effect_id: int, timestep: int) -> "Effect":
-        """
-        Initializes an effect based on Section 5.1 of spec.
-        """
         import random
         from .. import config
         

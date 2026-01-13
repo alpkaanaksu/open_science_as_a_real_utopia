@@ -32,9 +32,5 @@ class Study:
 
     @staticmethod
     def calculate_sample_size(target_power: float, reference_effect_size: float, is_two_sided: bool) -> int:
-        """
-        Calculates sample size based on target power and reference effect size.
-        Section 7.3 of spec.
-        """
         from ..formulas import calculate_sample_size
         return calculate_sample_size(target_power, reference_effect_size, is_two_sided)

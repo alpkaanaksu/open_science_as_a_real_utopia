@@ -6,7 +6,6 @@ from .enums import StudyType, PublicationBias
 def calculate_sample_size(target_power: float, reference_effect_size: float, is_two_sided: bool) -> int:
     """
     Calculates sample size based on target power and reference effect size.
-    Section 7.3 of spec.
     """
     if config.hold_samples_constant_at is not None:
         return config.hold_samples_constant_at
@@ -47,7 +46,6 @@ def update_belief_posterior(prior_mean: float, prior_var: float,
     """
     Updates collective beliefs using Bayesian conjugate analysis for normal distributions.
     Returns (new_mean, new_variance).
-    Section 7.6 of spec.
     """
     # SE is standard error, so var_likelihood = SE^2
     likelihood_variance = study_se**2
@@ -76,7 +74,6 @@ def calculate_kl_divergence(m1: float, v1: float, m2: float, v2: float) -> float
 def simulate_study_result(sample_size: int, true_d: float) -> tuple[float, float, float]:
     """
     Simulates study results (d_obs, se_d, t_obs).
-    Section 7.5 of spec.
     Returns (d_obs, se_d, t_obs).
     """
     ncp = (sample_size / 2.0)**0.5 * true_d

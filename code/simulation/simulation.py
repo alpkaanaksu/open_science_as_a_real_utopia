@@ -12,7 +12,6 @@ from .statistics import StatisticsCollector
 
 class Simulation:
     def __init__(self):
-        # 3. Create Domains (Now Refactored to Lists)
         # All Effects (Knowledge Base)
         self.effects: List[Effect] = [
             Effect.create(effect_id=i, timestep=0) 
@@ -49,7 +48,6 @@ class Simulation:
     def step(self):
         """
         Executes a single timestep.
-        Section 3 of spec (Modified Event Loop).
         """
         # 1. Researchers Act: Conduct studies
         self._researchers_act()
@@ -75,33 +73,24 @@ class Simulation:
         published_effect_ids = {s.effect_id for s in published_studies}
         
         published_effect_ids = {s.effect_id for s in published_studies}
-        
-        # Fast Replication Check 
-        # We need to act based on PUBLISHED studies only, but prevent intra-step stampedes.
-        
-        # Initial counts from published studies
+                
         from collections import Counter
         published_repl_counts = Counter()
         if published_studies:
              published_repl_counts = Counter(s.effect_id for s in published_studies if s.study_type == StudyType.REPLICATION)
              
-        # Tracking for this batch (intra-timestep collision prevention)
         current_batch_repl_counts = Counter()
         
         for researcher in ready_researchers:
-            # Determine Study Type (7.1)
             is_replication = random.random() < researcher.replication_probability
             
             target_effect = None
             study_type = StudyType.ORIGINAL
             
             if is_replication:
-                # 7.2.2 Replication: requires published studies
                 if published_effect_ids: 
-                    # Attempt loop
                     found_target = False
                     
-                    # Optimization: Sample from list
                     for _ in range(10): # 10 attempts
                         if not published_studies: break 
                         
@@ -110,17 +99,14 @@ class Simulation:
                         
                         # Check Max Replications Limit
                         if config.max_replications_per_effect is not None:
-                            # Count = Published + Batch
                             total_count = published_repl_counts[candidate_id] + current_batch_repl_counts[candidate_id]
                             if total_count >= config.max_replications_per_effect:
                                 continue 
                                 
-                        # Valid
                         target_effect = self.effects[candidate_id]
                         study_type = StudyType.REPLICATION
                         found_target = True
                         
-                        # Increment Intra-Batch Counter
                         current_batch_repl_counts[candidate_id] += 1
                         break
                     
@@ -129,14 +115,10 @@ class Simulation:
                 else:
                     is_replication = False
             
-            if not is_replication: # Original
-                # 7.2.1 Original: novel effects
-                
-                # Check exhaust
+            if not is_replication: # Original                
                 if len(published_effect_ids) >= config.number_of_effects:
                     continue
 
-                # Sample until finding one not published
                 attempts = 0
                 while True:
                     attempts += 1
@@ -169,7 +151,6 @@ class Simulation:
                 publishing_journal=None
             )
             
-            # Calculate Sample Size (7.3)
             reference_effect_size = 0.5 # Default burn-in
             is_two_sided = (study_type == StudyType.ORIGINAL)
             
@@ -183,7 +164,6 @@ class Simulation:
                     else:
                         reference_effect_size = 0.5
             else:
-                 # Original: "After burn-in, reference effect is mean of all published effect sizes"
                  if self.current_timestep > config.timesteps_per_career_step and published_studies:
                       mean_pub = sum(abs(s.estimated_mean) for s in published_studies) / len(published_studies)
                       reference_effect_size = mean_pub
@@ -191,12 +171,11 @@ class Simulation:
             sample_size = Study.calculate_sample_size(researcher.target_power, reference_effect_size, is_two_sided)
             new_study.sample_size = sample_size
             
-            # Calculate Duration (7.4)
+            # Calculate duration
             duration = Study.calculate_duration(study_type, sample_size)
             researcher.timestep_next_paper = self.current_timestep + duration
             new_study.timestep_completed = self.current_timestep + duration
             
-            # Generate Results (7.5)
             true_d = target_effect.true_effect_size
             
             from .formulas import simulate_study_result, calculate_p_value, update_belief_posterior, calculate_kl_divergence
@@ -220,7 +199,7 @@ class Simulation:
             new_study.estimated_se = se_d
             new_study.p_value = p_val
             
-            # Contribution Metrics (7.7)
+            # Contribution Metrics
             # Calculated relative to CURRENT beliefs (before update).
             curr_mean = target_effect.posterior_effect_size
             curr_var = target_effect.posterior_effect_variance
@@ -248,7 +227,6 @@ class Simulation:
         """
         Moves studies from pending to published if approved by ANY journal.
         "Shopping Around" logic.
-        CHECKS TIME: Only processes completed studies.
         """
         # Separate pending into ready and waiting
         ready_for_review = []
@@ -314,11 +292,6 @@ class Simulation:
         """
         Handles tenure review (firing) and recruitment (hiring).
         """
-        # 1. Rank Researchers
-        # Sort desc or asc? _get_researcher_career_score returns higher is better.
-        # sorted() is ascending by default. So bottom ones are at start.
-        # But simulation needs to remove bottom %.
-        
         current_roster = list(self.researchers)
         if not current_roster:
             return
@@ -350,7 +323,7 @@ class Simulation:
         
         self.researchers = survivors
         
-        # 3. Hire Replacements (Offspring)
+        # Hire Replacements (Offspring)
         n_needed = config.number_of_researchers - len(self.researchers)
         if n_needed > 0:
             new_hires = self._create_new_researchers(n_needed)
@@ -363,8 +336,6 @@ class Simulation:
         selection_condition = config.initial_selection_condition
         phase_start = self.current_timestep - config.timesteps_per_career_step
         
-        # Optimize: iterating all studies is slow. But standard method.
-        # In full sim, mapping study -> researcher would be faster.
         score = 0.0
         relevant_studies = [s for s in self.all_studies 
                             if s.researcher_id == researcher.researcher_id

@@ -1,5 +1,5 @@
 ---
-title: "Academia in Silico"
+title: "Academia in Silico: An Agent-Based Model of the Scientific Community to Examine the Impact of Replication Practices on the Accuracy of Collective Scientific Beliefs"
 shorttitle: "Academia in Silico"
 author:
   - name: Alp Kaan Aksu
@@ -25,7 +25,7 @@ author-note:
     financial-support: ~
     gratitude: ~
     authorship-agreements: ~
-abstract: "This document is a template."
+abstract: "This thesis develops an agent-based model of the scientific community to examine how replication practices and publication incentives shape the accuracy of collective scientific beliefs. Motivated by the replication crisis in psychology, the model represents researchers, effects, studies, and journals as interacting entities whose local decisions give rise to system-level outcomes. Using in silico experiments, different institutional interventions such as unbiased replication journals and limits on repeated replications are systematically compared under a truth-based selection regime. Results show that isolated reforms tend to be absorbed by existing dynamics, whereas coordinated interventions that both protect replicators and ensure their findings are published substantially reduce divergence between community beliefs and underlying truths. The findings suggest that replications can function as effective interventions, but only when embedded in broader, structurally aligned changes to the scientific system."
 bibliography: bibliography.bib
 toc: true
 format:
@@ -37,7 +37,7 @@ format:
     documentmode: stu
     course: For the award of the academic degree Bachelor of Science in Psychology
     professor: Prof. Dr. Felix Schönbrodt
-    duedate: 13.12.2026
+    duedate: 13.01.2026
     note: |
       Matriculation Number: 12607598
 ---
@@ -76,28 +76,26 @@ The scientific system, with its researchers, institutions and products, is a com
 
 We pick agent-based modeling as our tool, which will be described in detail in the next section.
 
+Our focus is understanding replications and their role. It is undisputable that replications contribute to qualified reflections about the validity of our knowledge. Can they also be used as interventions?
+
 # Method: Agent-Based Modeling
-
-## Why do we model?
-
-...
 
 ## What is Agent-Based Modeling?
 
-Agent-based modeling (ABM) is a computational method used to simulate the actions and interactions of autonomous agents to understand the behavior of a system from the bottom up. Unlike traditional top-down models that describe populations using aggregate variables, ABM focuses on the micro-level rules that drive individual behavior.
+Agent-based modeling is a computational method used to simulate the actions and interactions of autonomous agents to understand the behavior of a system from the bottom up. Unlike traditional top-down models that describe populations using aggregate variables, agent-based models focus on the micro-level rules that drive individual behavior, which in turn influence system-level outcomes.
 
 ## Why Agent-Based Modeling?
 
-The scientific community is a complex system where global outcomes—such as the rate of replication—emerge from the decentralized decisions of individual researchers navigating institutional incentives. ABM allows us to simulate these interactions in a controlled environment, making it possible to test how specific changes to the scientific system affect the long-term reliability of published knowledge.
+The scientific community is a complex system where global outcomes—such as the rate of replication—emerge from the decentralized decisions of individual researchers navigating institutional incentives. Agent-based models allow us to simulate these interactions in a controlled environment, making it possible to test how specific changes to the scientific system affect the long-term reliability of published knowledge.
 
 
 # Conceptual Design: Imagining an Agent-Based Model of the Scientific Community
 
-My model is based on (still unpublished) work by Kaitlyn Harper and Felix Schönbrodt at the Ludwig Maximilian University Munich. They provided me with their base model, which I then extended to enable new experiments and perspectives. A preliminary version of the source code of their model is available on [github.com/kaitlynharper/science-under-selection](https://github.com/kaitlynharper/science-under-selection).
+Our model is based on (still unpublished) work by Kaitlyn Harper and Felix Schönbrodt at the Ludwig Maximilian University Munich. They provided us with their base model, which we then extended to enable new experiments and perspectives. A preliminary version of the source code of their model is available on [github.com/kaitlynharper/science-under-selection](https://github.com/kaitlynharper/science-under-selection).
 
 ## The Idea
 
-The model conceptualizes the scientific community as a complex adaptive system composed of interacting entities that collectively generate, evaluate, and stabilize scientific knowledge over discrete time steps. At its core, the system is decomposed into four interacting components: **researchers**, **effects**, **studies**, and **journals**. Together, these elements define both the production of empirical claims and the selective pressures shaping scientific practice.
+The model conceptualizes the scientific community as a complex adaptive system composed of interacting entities that collectively generate, evaluate, and stabilize scientific knowledge over discrete time steps. At its core, the system is decomposed into four interacting components: researchers, effects, studies, and journals. Together, these elements define both the production of empirical claims and the selective pressures shaping scientific practice.
 
 With this model at hand, we can run experiments on the scientific system that would never be possible in the real world. Since our goal with creating this model is running in silico experiments, easy configurability is a key consideration and a goal of the implementation. The configuration options we choose to expose determine the possible set of alternative scientific systems we can simulate. 
 
@@ -151,7 +149,11 @@ Researchers' careers are evaluated based on the epistemic contribution of their 
 
 #### Novelty Contribution
 
-Novelty contribution quantifies how much a study shifts the community’s belief, operationalized as the divergence between prior and posterior distributions of community beliefs regarding the effects. If a study produced a result that is very different compared to the preceding studies, it is assigned a higher novelty contribution.
+Novelty contribution quantifies how much a study shifts the community’s belief, operationalized as the divergence between prior and posterior distributions of community beliefs regarding the effects. If a study produced a result that is very different compared to the preceding studies, it is assigned a higher novelty contribution. Although this selection pressure is not relevant for this study, it is included for the sake of completeness and comparability with the original model by Harper and Schönbrodt. It is calculated as the Kullback-Leibler divergence between the posterior belief $P = N(\mu_{post}, \sigma_{post}^2)$ and the prior belief $Q = N(\mu_{prior}, \sigma_{prior}^2)$:
+
+$$ D_{KL}(P || Q) = \ln\left(\frac{\sigma_{prior}}{\sigma_{post}}\right) + \frac{\sigma_{post}^2 + (\mu_{post} - \mu_{prior})^2}{2\sigma_{prior}^2} - \frac{1}{2} $$ 
+
+Novelty values are also still relevant for implementing publication bias.
 
 #### Truth Contribution
 
@@ -171,7 +173,11 @@ The simulation advances in discrete timesteps that represent the passage of time
 
 #### Original Study or Replication
 
-At the beginning of each timestep, the system enters the researcher action phase. All researchers who are currently active and not occupied with an ongoing project are identified. Each of these researchers makes a stochastic decision about how to allocate their resources. First, the researcher selects a research strategy, choosing between conducting a replication study or an original study. This choice is based on the researcher’s individual replication probability trait.
+At the beginning of each timestep, the system enters the researcher action phase. All researchers who are currently active and not occupied with an ongoing project are identified. Each of these researchers makes a stochastic decision about how to allocate their resources. First, the researcher selects a research strategy, choosing between conducting a replication study or an original study. This choice is based on the researcher’s individual replication probability trait. The specific study type is determined by comparing a random value to the researcher's replication probability $P_{rep}$:
+
+$$ \text{study\_type} = \begin{cases} \text{Replication} & \text{if } U < P_{rep} \\ \text{Original} & \text{otherwise} \end{cases} $$
+
+where $U$ is drawn from a uniform distribution $U \sim \text{Uniform}(0, 1)$.
 
 #### Selecting a Target (Effect/Study)
 
@@ -179,7 +185,15 @@ After selecting a strategy, the researcher selects a target. If replication is s
 
 #### Conducting the Study
 
-Once a target has been selected, the researcher commits to executing the study. The duration of the project is proportional to the required sample size, which is determined by the researcher’s target power. During this period, the researcher is marked as busy and cannot initiate additional projects. This dynamic represnts the time it takes to conduct a study in the real world. When the study is completed, data are generated based on the 'true effect' of the target effect, producing an observed effect size and an associated p-value.
+Once a target has been selected, the researcher commits to executing the study. The duration of the project is proportional to the required sample size, which is determined by the researcher’s target power. The sample size $n$ is calculated to achieve the target power $1-\beta$ given a reference effect size $\delta$:
+
+$$ n = 2 \cdot \frac{(z_{1-\alpha/2} + z_{1-\beta})^2}{\delta^2} + 1 $$
+
+where $z$ values represent critical values from the standard normal distribution and $\alpha = 0.05$. Subsequently, the study duration $T$ is determined as a linear function of this sample size:
+
+$$ T = \lceil \beta_0 + \beta_1 \cdot n \rceil $$
+
+During this period, the researcher is marked as busy and cannot initiate additional projects. This dynamic represnts the time it takes to conduct a study in the real world. When the study is completed, data are generated based on the 'true effect' of the target effect, producing an observed effect size and an associated p-value.
 
 In each step, new studies are started as long as the preconditions are met (i.e., the researcher is not busy and there are available effects waiting to be studied).
 
@@ -189,7 +203,13 @@ After the research phase, the simulation enters the peer review phase, which mod
 
 #### Community Belief Update
 
-If a journal accepts the study, it becomes part of the public scientific record. Acceptance triggers an update of the community’s aggregate belief about the corresponding effect, implemented through Bayesian inference. If the study is rejected, it is submitted to the next journal in the sequence. If all journals reject the study, it is assigned to the file drawer. In this case, the study has no impact on collective knowledge, and the community belief state remains unchanged.
+If a journal accepts the study, it becomes part of the public scientific record. Acceptance triggers an update of the community’s aggregate belief about the corresponding effect, implemented through Bayesian inference. The collective belief is updated from the prior $N(\mu_{prior}, \sigma^2_{prior})$ to the posterior $N(\mu_{post}, \sigma^2_{post})$ by weighting the prior and the new evidence inversely to their variance:
+
+$$ \sigma^2_{post} = \left( \frac{1}{\sigma^2_{prior}} + \frac{1}{SE^2} \right)^{-1} $$
+
+$$ \mu_{post} = \sigma^2_{post} \left( \frac{\mu_{prior}}{\sigma^2_{prior}} + \frac{d_{obs}}{SE^2} \right) $$
+
+If the study is rejected, it is submitted to the next journal in the sequence. If all journals reject the study, it is assigned to the file drawer. In this case, the study has no impact on collective knowledge, and the community belief state remains unchanged.
 
 ### Career Turnover
 
@@ -239,7 +259,6 @@ The main target audience of this project is the scientific community that exists
 
 The implication is that the audience in this case is not fully technically illiterate, but also typically not a competent programmer. They should still be able to have a high-level understanding of the model, and be able to run it, and to some extent modify it. 
 
-
 ### Theoretical Needs
 
 The theoretical model for this project includes multiple statistical operations, in many places, a value is drawn from a distribution. The tools we choose should be mathematically apt (which is not hard to come by with computational tools) and have further helpers in place that support the work with statistical distributions. This means, the more the tools are generally used for statistics, the easier it is to implement our model.
@@ -270,7 +289,7 @@ The code is available on GitHub at [github.com/alpkaanaksu/academia-in-silico](h
 
 ![UML Diagram](media/uml.svg){#fig-uml fig-pos="h"}
 
-@fig-uml shows a UML diagram of the core classes relevant for the simulation. All entities resulting from the decomposition are modeled as classes. Their internal state properties are represented as attributes, and the interactions are represented as methods. The only exception to this rule is the entity of Journals. Journals are not present as a distinct class, but rather embedded in diverse places of the codebase. This is due to several factors. First, the way journals are seen in the theoretical model is more like an environment defining global variable than a distinct entity. Second, modeling journals as a distincs class would introduce a different type of interaction, which is not present in the original model description. Third, it would add a new phase to the simulation step run, which is a greater deviation from the previous understanding, that focuses on key phases for each step.
+@fig-uml shows a UML diagram of the core classes relevant for the simulation. All entities resulting from the decomposition are modeled as classes. Their internal state properties are represented as attributes, and the interactions are represented as methods. The only exception to this rule is the entity of Journals. Journals are not present as a distinct class, but rather embedded in diverse places of the codebase. This is due to several factors. First, the way journals are seen in the theoretical model is more like an environment defining global variable than a distinct entity. Second, modeling journals as a distinc class would introduce a different type of interaction, which is not present in the original model description. Third, it would add a new phase to the simulation step run, which is a greater deviation from the previous understanding, that focuses on key phases for each step.
 
 
 # Experiments
@@ -289,30 +308,34 @@ The simulation runs for a specified number of discrete timesteps (default: 300).
 
 ### Peer Review and Bias
 
-The publication landscape is defined by the bias level of standard journals. This can be set to **None** (unbiased acceptance), **Weak** (preference for significance and novelty), or **Strong** (strict gatekeeping). Additionally, a specialized **Replication Reports** journal can be toggled on or off. This journal strictly accepts replication studies regardless of their results, providing a dedicated outlet for negative findings.
+The publication landscape is defined by the bias level of standard journals. This can be set to None (unbiased acceptance), Weak (preference for significance and novelty), or Strong (strict gatekeeping). Additionally, a specialized *Replication Reports* journal can be toggled on or off. This journal strictly accepts replication studies regardless of their results, providing a dedicated outlet for negative findings.
 
 ### Researcher Strategy and Selection
 
-On of the possible experimental levers is the selection regime used to evaluate researchers. **Novelty Selection** rewards researchers for publishing surprising results that shift community belief, regardless of whether that shift is towards the truth, whereas **Truth Selection** rewards researchers for reducing the error between community belief and the true effect size. Additionally, a hard limit on **Max Replications** per effect can be enforced to effectively stop the community from refining estimates beyond a certain point.
+On of the possible experimental levers is the selection regime used to evaluate researchers. Novelty Selection rewards researchers for publishing surprising results that shift community belief, regardless of whether that shift is towards the truth, whereas Truth Selection rewards researchers for reducing the error between community belief and the true effect size. Additionally, a hard limit on Max Replications per effect can be enforced to effectively stop the community from refining estimates beyond a certain point.
 
 ## Outcome Variables - Emergent Phenomena of the Model
 
 For each run, we track the same variables to understand the effects of certain different configurations. Their course over time is registered and displayed in the resulting plots as line charts. The following variables are tracked:
 
 **1. Researcher Traits Evolution**
-* **Mean Replication Prob**: The average probability of researchers choosing to replicate instead of conducting original studies.
-* **Mean Target Power**: The average statistical power researchers aim for when designing studies.
+
+* Mean Replication Probability: The average probability of researchers choosing to replicate instead of conducting original studies.
+* Mean Target Power: The average statistical power researchers aim for when designing studies.
 
 **2. Belief Accuracy**
-* **Mean KL Divergence**: The average Kullback-Leibler divergence between the "True" effect distribution and the community's "Posterior" belief. Measures how far the community's consensus is from the objective truth.
+
+* Mean KL Divergence: The average Kullback-Leibler divergence between the "True" effect distribution and the community's "Posterior" belief. Measures how far the community's consensus is from the objective truth.
 
 **3. Replication / Original Ratio**
-* **R/O Ratio**: The ratio of published replication studies to published original studies over time. We understand this as a proxy for a general preference of researchers for conducting replication studies.
+
+* R/O Ratio: The ratio of published replication studies to published original studies over time. We understand this as a proxy for a general preference of researchers for conducting replication studies.
 
 **4. Publications by Journal**
-* **Count**: Cumulative number of studies published by each individual journal. This allows us to see under which conditions studies were published.
 
-Most important statistic of all is the **Mean KL Divergence**. It measures how far the community's consensus is from the objective truth. The lower the better. We choose this metric as the main statistic to evaluate the performance of different configurations due to the reasons outlined in the introduction. We believe, the main goal of science is to produce 'truths' (i.e. knowledge that approximates reality).
+* Count: Cumulative number of studies published by each individual journal. This allows us to see under which conditions studies were published.
+
+Most important statistic of all is the Mean KL Divergence. It measures how far the community's consensus is from the objective truth. The lower the better. We choose this metric as the main statistic to evaluate the performance of different configurations due to the reasons outlined in the introduction. We believe, the main goal of science is to produce 'truths' (i.e. knowledge that approximates reality).
 
 Each plot for a run shows the configuration of the run on top of all the plots.
 
@@ -436,6 +459,8 @@ For this, we created a utopic condition of selection pressure, where the 'hiring
 
 Running small experiments using this model, we found that it is challenging to push the system as a whole in another direction. Any simple changes that were made, such as introducing a Journal of Publications, were strangled and the system reverted to its original state.
 
+We found that intervening at multiple points and enforcing rules is the solution. By protecting replicators, enforcing a limit on the number of replications, and allowing unbiased publications, we were successfull at decreasing the mean divergence of beliefs from the truth.
+
 ## Limitations and Future Directions
 
 ### Different Decomposition, Different Results
@@ -451,6 +476,16 @@ Agent-based models are great at creating bottom-up simulations of complex system
 Our experiments strongly relied on the utopic truth-based selection condition. Even though it was useful for our needs, any conclusions we come to can not be used for real-world applications. Other projects should look into introducing more realistic selection conditians, for example, use of open scientific practices that may similarly lead to more accurate community beliefs regarding effects. 
 
 ## Conclusion
+
+In this project, we created an agent-based model of the scientific community to explore how different interventions shape collective beliefs about the truth.
+
+ Our results suggest that isolated, single-point reforms are insufficient, as the system tends to revert to its original dynamics, whereas coordinated interventions across multiple stages can meaningfully reduce divergence from the truth.
+  
+ At the same time, the complexity of deciding what to include in the model and what to leave out, combined with the uncertainty about the representativity of the model compared to the real world highlights the difficulty of distinguishing robust signals from artifacts in complex simulations.
+ 
+ Future work should focus on refining the conceptual design and replacing utopic truth-based selection with more realistic mechanisms, such as open scientific practices, to deliver more actionable insights.
+
+ The answer to the question whether replications can be used as interventions is *'probably yes'*. They do seem to improve the situation, but the implementation of such interventions is not straightforward. The work that is needed to implement such interventions is a lot more complicated than it seems at first glance.
 
 # References
 

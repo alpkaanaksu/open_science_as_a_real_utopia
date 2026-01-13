@@ -41,28 +41,15 @@ class StatisticsCollector:
         n_explored = len(unique_effects)
         avg_per_effect = n_total / n_explored if n_explored > 0 else 0.0
         
-        # Calculate Belief Accuracy (MAE for published effects)
-        # Access effects domain directly
         all_effects = sim.effects
-        # Filter for effects that have been updated (have at least one published study)
-        # We can use study_id check or check if posterior variance < prior variance
-        # study_id check is safer if we trust update_belief sets it
+       
         explored_effects_objs = [e for e in all_effects if e.study_id is not None]
         
         if explored_effects_objs:
             from .formulas import calculate_kl_divergence
-            # D_KL(True || Posterior)
-            # Spec 7.10: "sum of KL divergences" -> "accuracy metric".
-            # User wants "Mean KL divergence".
             
             kl_divs = []
             for e in explored_effects_objs:
-                # True dist: N(true_d, 0.01) - variance assumes spec default or we need to access it
-                # Effect entity has true_effect_variance? Checking properties...
-                # Checked previous files: Effect has true_effect_variance (default 0.01? or initialized)
-                
-                # Using e.true_effect_variance if it exists, else hardcode small var as per spec?
-                # Spec 5.1 creates effects. Let's assume the attribute exists.
                 true_var = e.true_effect_variance if hasattr(e, 'true_effect_variance') else 0.01
                 
                 kl = calculate_kl_divergence(
@@ -79,8 +66,6 @@ class StatisticsCollector:
 
         
         # Count types in published
-        # Optimized: Sim maintains separate list or we filter. 
-        # For performance, iterating here is O(N_published). N ~ 1000s -> acceptable.
         n_orig = sum(1 for s in published if s.study_type == StudyType.ORIGINAL)
         n_repl = sum(1 for s in published if s.study_type == StudyType.REPLICATION)
         

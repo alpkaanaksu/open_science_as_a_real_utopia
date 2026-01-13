@@ -94,24 +94,17 @@ class Visualizer:
         # 1(Traits)  3(Ratio)   5(Journals)
         # 2(KL)      4(Empty?)  6(Stats)
         
-        # Original ax4 was stats. Let's make ax6 stats.
         self.ax6.axis("off")
         self.stats_text = self.ax6.text(0.1, 0.5, "Collecting data...", fontsize=12, verticalalignment='center')
         
-        # Plot 4: Empty (Previously MSE)
         self.ax4.axis("off")
         
-        # Plot 4: Statistics (Bottom Right)
-
-        
-        # Track max timestep for global scaling
         self.max_timestep = 0
 
         print("Visualizer initialized. Window should appear.")
 
     def _update_series(self, series_dict: dict, t: int, value: float):
         """Helper to append data point only if value changes (avoids stairs)."""
-        # Always add first point
         if not series_dict['y']:
             series_dict['x'].append(t)
             series_dict['y'].append(value)
@@ -228,7 +221,7 @@ class Visualizer:
         # Draw
         self.fig.canvas.flush_events()
         self.fig.canvas.draw()
-        plt.pause(0.01) # Slightly shorter pause is usually fine with flush
+        plt.pause(0.01)
 
     def save_plot(self, filepath: str):
         """Saves the current figure to a file."""
@@ -239,7 +232,6 @@ class Visualizer:
     def close(self):
         if HAS_MATPLOTLIB:
             plt.ioff()
-            # plt.show() # Keep window open until closed by user -> Handled by main.py logic now
 
     def show_blocking(self):
         """Blocks execution until plot window is closed."""
